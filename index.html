@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0f172a; color: #e2e8f0; font-family: system-ui, sans-serif; font-size: 13px; }
+.hdr { background: #1e293b; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; }
+.tabs { display: flex; background: #1e293b; border-bottom: 1px solid #334155; }
+.tab { flex: 1; padding: 10px 4px; border: none; background: transparent; color: #64748b; cursor: pointer; font-size: 12px; font-weight: 600; }
+.tab.on { color: #f59e0b; border-bottom: 2px solid #f59e0b; }
+.pg { display: none; padding: 12px; max-width: 500px; margin: 0 auto; }
+.pg.on { display: block; }
+.card { background: #1e293b; padding: 14px; border-radius: 10px; border: 1px solid #334155; margin-bottom: 12px; }
+.ct { color: #f59e0b; font-weight: 700; font-size: 11px; margin-bottom: 12px; }
+.fl { margin-bottom: 10px; }
+.lb { color: #64748b; font-size: 11px; margin-bottom: 3px; }
+.au { color: #60a5fa; }
+input, select, textarea { background: #0a1628; border: 1px solid #334155; border-radius: 6px; color: #e2e8f0; padding: 8px 10px; width: 100%; font-size: 13px; outline: none; }
+textarea { resize: none; }
+.row { display: flex; gap: 6px; }
+.tog { flex: 1; padding: 9px 4px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 12px; background: #1a2c46; color: #5a7a9a; }
+.gn { background: #22c55e; color: #000; }
+.rd { background: #ef4444; color: #000; }
+.am { background: #f59e0b; color: #000; }
+.badge { background: #0a1628; border: 1px solid #334155; border-radius: 6px; padding: 8px 10px; font-weight: 700; font-size: 13px; }
+.sbtn { width: 100%; padding: 13px; border: none; border-radius: 8px; background: #f59e0b; color: #000; font-weight: 800; cursor: pointer; font-size: 14px; }
+.kgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+.kcard { background: #1e293b; border-radius: 10px; padding: 12px 14px; border: 1px solid #334155; }
+.kv { font-weight: 700; font-size: 20px; margin-top: 2px; }
+.barbg { background: #1a2c46; height: 8px; border-radius: 4px; margin-top: 4px; }
+.bar { height: 100%; border-radius: 4px; }
+.sr { margin-bottom: 10px; }
+.srl { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 2px; }
+.ti { padding: 9px 0; border-bottom: 1px solid #0f172a; display: flex; justify-content: space-between; }
+.dbtn { background: none; border: none; color: #ef4444; cursor: pointer; font-size: 14px; }
+.ov { position: fixed; left: 0; top: 0; right: 0; bottom: 0; background: rgba(0,0,0,.85); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+.hide { display: none; }
+.obox { background: #1e293b; border-radius: 14px; padding: 24px; border: 1px solid #334155; width: 100%; max-width: 340px; }
+.ucard { padding: 14px; border-radius: 10px; border: 2px solid #334155; cursor: pointer; margin-bottom: 10px; text-align: center; }
+</style>
+</head>
+<body>
+
+<div id="usel" class="ov">
+  <div class="obox">
+    <div style="color:#f59e0b;font-weight:800;font-size:16px;text-align:center;margin-bottom:16px">TopG Journal</div>
+    <div class="ucard" onclick="setUser('Junaid')" style="border-color:#3b82f6">
+      <div style="font-weight:700;font-size:15px;color:#3b82f6">Junaid</div>
+      <div style="color:#64748b;font-size:11px">59 trades</div>
+    </div>
+    <div class="ucard" onclick="setUser('Ausaaf')" style="border-color:#22c55e">
+      <div style="font-weight:700;font-size:15px;color:#22c55e">Ausaaf</div>
+    </div>
+    <div class="ucard" onclick="setUser('Faizan')" style="border-color:#a855f7">
+      <div style="font-weight:700;font-size:15px;color:#a855f7">Faizan</div>
+    </div>
+  </div>
+</div>
+
+<div id="sett" class="ov hide">
+  <div class="obox">
+    <div style="color:#f59e0b;font-weight:700;font-size:14px;margin-bottom:16px">Google Sheet URL</div>
+    <input id="asurl" placeholder="https://script.google.com/..." style="font-size:11px;margin-bottom:14px">
+    <div style="display:flex;gap:8px">
+      <button onclick="saveUrl()" style="flex:1;padding:10px;border:none;border-radius:8px;background:#f59e0b;color:#000;font-weight:700;cursor:pointer">Save</button>
+      <button onclick="closeSett()" style="flex:1;padding:10px;border:none;border-radius:8px;background:#334155;color:#e2e8f0;cursor:pointer">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="hdr">
+  <div style="display:flex;align-items:center;gap:8px">
+    <b style="color:#f59e0b;font-size:14px">TopG</b>
+    <button id="ubtn" onclick="openUser()" style="padding:3px 10px;border-radius:20px;border:none;cursor:pointer;font-size:11px;font-weight:700;background:#3b82f6;color:#000">Junaid</button>
+    <span id="sync" style="font-size:11px;color:#64748b">idle</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <div style="text-align:right">
+      <div id="hn" style="font-weight:700;font-size:12px;color:#22c55e">0p</div>
+      <div id="hc" style="color:#475569;font-size:10px">0 trades</div>
+    </div>
+    <button onclick="openSett()" style="background:none;border:1px solid #334155;border-radius:8px;color:#64748b;cursor:pointer;padding:5px 8px">Set</button>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab on" id="t-log" onclick="go('log')">Log</button>
+  <button class="tab" id="t-stats" onclick="go('stats')">Stats</button>
+  <button class="tab" id="t-hist" onclick="go('hist')">History</button>
+</div>
+
+<div id="pg-log" class="pg on">
+  <div class="card">
+    <div class="ct">TRADE INFO</div>
+    <div class="fl"><div class="lb">Session</div>
+      <select id="ses"><option>No Session</option><option>Asian</option><option>London</option><option selected>NY</option></select></div>
+    <div class="fl"><div class="lb">Direction</div>
+      <div class="row">
+        <button class="tog gn" id="bBuy" onclick="setF('bs','Buy')">Buy</button>
+        <button class="tog" id="bSell" onclick="setF('bs','Sell')">Sell</button>
+      </div></div>
+    <div class="fl"><div class="lb">Level</div>
+      <select id="lvl"><option>TJL1</option><option>TJL2 A+</option><option>SBR</option><option>RBS</option><option>DB</option><option>DT</option><option>QMLA+</option><option>Level3</option><option>Other</option></select></div>
+    <div class="fl"><div class="lb">Zone Size</div><input type="number" id="zone" placeholder="25"></div>
+  </div>
+  <div class="card">
+    <div class="ct">STRUCTURE</div>
+    <div class="fl"><div class="lb">Daily</div><div class="row"><button class="tog gn" id="sD-B" onclick="setSt('sD','Bullish')">Bullish</button><button class="tog" id="sD-R" onclick="setSt('sD','Bearish')">Bearish</button></div></div>
+    <div class="fl"><div class="lb">4HR</div><div class="row"><button class="tog gn" id="s4-B" onclick="setSt('s4','Bullish')">Bullish</button><button class="tog" id="s4-R" onclick="setSt('s4','Bearish')">Bearish</button></div></div>
+    <div class="fl"><div class="lb">1HR</div><div class="row"><button class="tog gn" id="s1-B" onclick="setSt('s1','Bullish')">Bullish</button><button class="tog" id="s1-R" onclick="setSt('s1','Bearish')">Bearish</button></div></div>
+    <div class="fl"><div class="lb">15Min</div><div class="row"><button class="tog gn" id="s15-B" onclick="setSt('s15','Bullish')">Bullish</button><button class="tog" id="s15-R" onclick="setSt('s15','Bearish')">Bearish</button></div></div>
+    <div class="fl"><div class="lb">5Min</div><div class="row"><button class="tog gn" id="s5-B" onclick="setSt('s5','Bullish')">Bullish</button><button class="tog" id="s5-R" onclick="setSt('s5','Bearish')">Bearish</button></div></div>
+  </div>
+  <div class="card">
+    <div class="ct">BIAS</div>
+    <div class="fl"><div class="lb">Daily Bias</div><div class="row"><button class="tog gn" id="db-B" onclick="setBi('db','Bullish')">Bullish</button><button class="tog" id="db-R" onclick="setBi('db','Bearish')">Bearish</button></div></div>
+    <div class="fl"><div class="lb">4HR Bias</div><div class="row"><button class="tog gn" id="h4-B" onclick="setBi('h4','Bullish')">Bullish</button><button class="tog" id="h4-R" onclick="setBi('h4','Bearish')">Bearish</button></div></div>
+    <div class="fl"><div class="lb au">Bias Aligned</div><div id="ba-auto" class="badge" style="color:#22c55e">Both Aligned</div></div>
+  </div>
+  <div class="card">
+    <div class="ct">CONFIRMATION</div>
+    <div class="fl"><div class="lb">Conf 1</div>
+      <select id="c1" onchange="upd()"><option value="">None</option><option value="Zone Tap, 1st CC">Zone Tap, 1st CC</option><option value="Liquidity Sweep, 1st CC">Liquidity Sweep, 1st CC</option></select></div>
+    <div class="fl"><div class="lb">Conf 2</div>
+      <select id="c2"><option>Normal</option><option>Engulfing</option><option>Hammer</option><option>Strong Green</option><option>Strong Sell</option></select></div>
+    <div class="fl"><div class="lb au">Liq Sweep</div><div id="ls-auto" class="badge" style="color:#64748b">-</div></div>
+  </div>
+  <div class="card">
+    <div class="ct">RESULT</div>
+    <div class="fl"><div class="lb">Result</div>
+      <div class="row">
+        <button class="tog gn" id="bTP" onclick="setRes('TP')">TP</button>
+        <button class="tog" id="bSL" onclick="setRes('SL')">SL</button>
+        <button class="tog" id="bCTC" onclick="setRes('CTC')">CTC</button>
+      </div></div>
+    <div class="fl"><div class="lb au">PnL</div><div id="pnl-auto" class="badge" style="color:#22c55e">70p</div></div>
+    <div class="fl"><div class="lb au">Net PnL</div><div id="net-auto" class="badge" style="color:#22c55e">70p</div></div>
+    <div class="fl"><div class="lb">Emotions</div><input type="text" id="emo" placeholder="Calm"></div>
+    <div class="fl"><div class="lb">Notes</div><textarea id="note" rows="2" placeholder="Notes"></textarea></div>
+    <button class="sbtn" id="sbtn" onclick="saveTrade()">Save Trade</button>
+  </div>
+</div>
+
+<div id="pg-stats" class="pg">
+  <div class="kgrid">
+    <div class="kcard"><div class="lb">Total</div><div class="kv" id="st-tot">0</div></div>
+    <div class="kcard"><div class="lb">Win TP</div><div class="kv" id="st-win" style="color:#22c55e">0</div></div>
+    <div class="kcard"><div class="lb">Win Rate</div><div class="kv" id="st-wr" style="color:#22c55e">0%</div></div>
+    <div class="kcard"><div class="lb">Net PnL</div><div class="kv" id="st-net">0p</div></div>
+  </div>
+  <div class="card"><div class="ct">BY LEVEL</div><div id="by-lvl"></div></div>
+  <div class="card"><div class="ct">BIAS PnL</div><div id="by-ba"></div></div>
+  <div class="card"><div class="ct">LIQUIDITY SWEEP PnL</div><div id="by-ls"></div></div>
+  <div class="card"><div class="ct">BY SESSION</div><div id="by-ses" style="display:flex;gap:8px;flex-wrap:wrap"></div></div>
+</div>
+
+<div id="pg-hist" class="pg">
+  <div style="display:flex;justify-content:space-between;margin-bottom:12px">
+    <span id="hct" style="color:#64748b;font-size:12px">0 trades</span>
+    <button onclick="xcsv()" style="padding:7px 14px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#f59e0b;cursor:pointer;font-size:12px;font-weight:700">CSV</button>
+  </div>
+  <div id="hlist"></div>
+</div>
+
+<script>
+var BA = ["Both 4hr, Daily Aligned", "Not aligned with Daily, 4Hr Bias"];
+var SES = ["No Session", "Asian", "London", "NY"];
+var LVL = ["TJL1", "TJL2 A+", "SBR", "RBS", "DB", "DT", "QMLA+", "Level3", "Other"];
+var C1A = ["", "Zone Tap, 1st CC", "Liquidity Sweep, 1st CC"];
+var C2A = ["Normal", "Engulfing", "Hammer", "Strong Green", "Strong Sell"];
+var RA = ["SL", "TP", "CTC"];
+var BV = ["Bearish", "Bullish", ""];
+var LSV = ["No", "Yes", ""];
+var D7 = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+var UC = { Junaid: "#3b82f6", Ausaaf: "#22c55e", Faizan: "#a855f7" };
+
+var RAW = [
+"2020-07-23|0|0|0|11|1|1|1|1|1|1|1|0|1|0|0|0|",
+"2020-07-23|0|0|0|11|1|1|1|1|1|1|1|0|2|2|1|0|",
+"2020-07-24|3|0|0|16|1|1|1|1|1|1|1|0|1|0|0|2|",
+"2020-07-27|0|0|0|10|1|1|1|1|1|1|1|0|1|1|0|1|",
+"2020-07-27|0|0|0|10|1|1|1|1|1|1|1|0|2|0|1|1|",
+"2020-07-27|0|0|0|40|1|1|1|1|1|1|1|0|1|0|0|0|",
+"2020-07-27|0|0|0|40|1|1|1|1|1|1|1|0|2|1|1|0|",
+"2020-07-27|3|0|1|65|1|1|1|1|1|1|1|0|1|0|0|0|",
+"2020-07-28|1|0|0|10|1|1|1|1|1|1|1|0|1|1|0|0|if waited for LS then profit 70 pips",
+"2020-07-28|1|0|0|10|1|1|1|1|1|1|1|0|2|0|1|1|above trade if waited for LS",
+"2020-07-28|2|0|1|10|1|1|1|1|0|1|1|0|2|1|1|0|sharp selling no green candle before CC",
+"2020-07-28|2|0|1|10|1|1|1|1|0|1|1|0|0|0|1|1|above trade re-entry",
+"2020-07-28|2|1|2|10|1|1|1|0|0|1|1|1|2|1|1|0|4 green candle then red CC sl hit",
+"2022-07-28|2|1|2|10|1|1|1|0|0|1|1|1|0|0|1|1|above trade re-entry result",
+"2022-07-28|3|1|6|10|1|1|0|0|0|1|1|1|2|0|1|0|if reentery then also sl",
+"2022-07-29|1|0|7|10|1|1|0|1|0|1|1|0|1|0|0|0|if reentry after LS then sl",
+"2022-07-29|2|0|7|15|1|1|0|1|0|1|1|0|2|0|1|1|news time big candles",
+"2022-08-02|1|0|0|15|0|1|1|1|0|1|1|0|1|0|0|0|6 red candle then green CC",
+"2022-08-02|1|0|0|15|0|1|1|1|0|1|1|0|2|1|1|0|",
+"2022-08-02|3|0|0|5|0|1|1|1|1|1|1|0|2|0|1|0|if reentry get tp 70pips",
+"2022-02-08|0|0|1|30|0|1|1|1|0|1|1|0|1|1|0|0|",
+"2022-08-02|0|0|1|70|0|1|0|0|0|0|0|0|1|0|0|0|pending 15min TJL2",
+"2022-08-03|1|1|0|10|0|1|0|0|0|0|0|0|2|0|1|0|",
+"2022-08-03|1|1|1|10|0|1|0|0|1|0|0|0|1|0|0|0|",
+"2022-08-03|0|1|2|30|0|1|0|1|1|0|0|0|1|0|0|1|Pending 15min SBR",
+"2022-08-03|2|0|3|10|0|1|0|1|1|0|0|1|2|1|1|1|4 red candles before green CC",
+"2022-08-03|2|0|6|10|0|1|0|1|0|0|0|1|2|1|1|1|15min rbs trade",
+"2022-08-03|2|0|4|10|0|1|0|1|0|0|0|1|1|2|0|1|before 15min DB tapped 1hr SBR",
+"2022-08-03|2|0|4|10|0|1|1|1|0|0|0|1|2|3|1|1|same level after LS",
+"2022-08-04|1|0|0|10|0|1|0|1|1|1|1|0|1|0|0|1|3 red candle before green CC",
+"2022-08-04|2|1|6|10|0|1|0|1|1|1|1|1|2|0|1|0|pending 15min QML",
+"2022-08-04|0|1|5|20|0|1|0|1|1|1|1|1|1|0|0|1|pending 15min DT",
+"2022-08-04|0|1|5|20|0|1|0|1|1|1|1|1|2|0|1|1|above after LS",
+"2022-08-04|3|0|0|10|0|1|0|1|0|1|1|0|1|0|0|1|",
+"2022-08-05|2|0|0|5|0|1|1|1|0|1|1|0|2|0|1|0|4hr TJL1 buying",
+"2022-08-05|3|0|1|25|0|1|1|1|0|1|1|0|2|1|1|0|if reentered also sl",
+"2022-08-05|3|0|1|5|0|1|1|1|0|0|0|0|2|1|1|0|if reentered tp 70",
+"2022-08-05|3|0|1|5|0|1|1|1|0|0|0|0|0|1|1|1|above reentered",
+"2022-08-05|3|1|2|25|0|1|1|1|0|0|0|1|1|1|0|0|",
+"2022-08-05|3|1|2|25|0|1|1|1|0|0|0|1|2|4|1|2|market closing ctc",
+"2022-08-10|3|0|0|30|0|1|1|1|1|1|2|0|2|0|1|0|3 red candle then green CC",
+"2022-08-10|3|0|0|30|0|1|1|1|1|1|2|0|0|1|1|1|above reentered",
+"2022-08-11|1|1|2|30|0|0|1|0|0|0|0|0|1|4|0|0|4hr double top",
+"2022-08-11|1|1|1|10|0|0|1|0|0|0|0|0|1|4|0|0|15min SBR zone",
+"2022-08-11|2|0|3|10|0|1|1|1|1|0|0|1|1|3|0|1|11 red candles then CC",
+"2022-08-11|2|0|0|10|0|1|0|1|1|0|0|1|1|1|0|1|",
+"2022-08-11|3|1|6|26|0|1|0|1|1|0|0|0|1|0|0|1|1hr QML selling",
+"2022-08-11|3|0|1|10|0|1|0|1|0|0|0|1|1|0|0|0|",
+"2022-08-11|3|0|1|10|0|1|0|1|0|0|0|1|2|0|1|1|above after LS",
+"2022-08-11|3|0|0|10|0|1|0|1|1|0|0|1|1|0|0|1|",
+"2022-08-11|3|0|0|10|0|1|0|1|1|0|0|1|2|0|1|0|1hr qml bearish zone",
+"2022-08-11|3|0|1|30|0|1|0|1|1|0|0|1|1|4|0|0|1hr qml bearish",
+"2022-08-11|3|0|1|10|0|1|0|1|1|0|0|1|1|0|0|1|pending 15min TJL2",
+"2022-08-11|3|0|1|10|0|1|0|0|0|0|0|1|1|0|0|0|pending 15min TJL2",
+"2022-08-11|3|0|1|10|0|1|0|0|0|0|0|1|0|2|1|1|reentered after sl",
+"2022-08-11|3|1|2|30|0|1|0|0|0|0|0|0|1|0|0|0|",
+"2022-12-08|3|1|5|20|0|1|0|0|1|1|1|1|1|0|0|1|",
+"2022-08-15|1|1|0|10|0|1|0|0|0|1|1|1|1|4|0|1|",
+"2022-08-15|0|0|4|10|0|1|0|0|0|1|1|0|2|1|1|0|if re-entered also sl"
+];
+
+function decode() {
+  var n = 0;
+  var out = [];
+  var i = 0;
+  while (i < RAW.length) {
+    var p = RAW[i].split("|");
+    var res = parseInt(p[16]);
+    var pnl = 0;
+    if (res === 1) { pnl = 70; }
+    if (res === 0) { pnl = -35; }
+    n = n + pnl;
+    var obj = {};
+    obj.id = 1000000000 + i;
+    obj.no = i + 1;
+    obj.date = p[0];
+    obj.day = D7[new Date(p[0]).getDay()];
+    obj.session = SES[parseInt(p[1])];
+    if (parseInt(p[2]) === 1) { obj.bs = "Sell"; } else { obj.bs = "Buy"; }
+    obj.level = LVL[parseInt(p[3])];
+    obj.zone = p[4];
+    obj.sD = BV[parseInt(p[5])];
+    obj.s4 = BV[parseInt(p[6])];
+    obj.s1 = BV[parseInt(p[7])];
+    obj.s15 = BV[parseInt(p[8])];
+    obj.s5 = BV[parseInt(p[9])];
+    obj.db = BV[parseInt(p[10])];
+    obj.h4b = BV[parseInt(p[11])];
+    obj.biasAligned = BA[parseInt(p[12])];
+    obj.c1 = C1A[parseInt(p[13])];
+    obj.c2 = C2A[parseInt(p[14])];
+    obj.ls = LSV[parseInt(p[15])];
+    obj.result = RA[res];
+    obj.pnl = pnl;
+    obj.netPnL = n;
+    obj.emo = "";
+    obj.note = p.slice(17).join("|");
+    out.push(obj);
+    i = i + 1;
+  }
+  return out;
+}
+
+var T = [];
+var CU = "";
+var asUrl = "";
+var F = { bs: "Buy", sD: "Bullish", s4: "Bullish", s1: "Bullish", s15: "Bullish", s5: "Bullish", db: "Bullish", h4: "Bullish", res: "TP" };
+
+function gNet() {
+  var s = 0;
+  var i = 0;
+  while (i < T.length) { s = s + T[i].pnl; i = i + 1; }
+  return s;
+}
+
+function gBias() {
+  if (F.bs === "Buy" && F.db === "Bullish" && F.h4 === "Bullish") { return BA[0]; }
+  if (F.bs === "Sell" && F.db === "Bearish" && F.h4 === "Bearish") { return BA[0]; }
+  return BA[1];
+}
+
+function gLS(v) {
+  if (v.indexOf("Liquidity") >= 0) { return "Yes"; }
+  if (v.length > 0) { return "No"; }
+  return "";
+}
+
+function gPnL(r) {
+  if (r === "TP") { return 70; }
+  if (r === "SL") { return -35; }
+  return 0;
+}
+
+function lsGet(k) {
+  if (window.localStorage) { return localStorage.getItem(k); }
+  return null;
+}
+
+function lsSet(k, v) {
+  if (window.localStorage) { localStorage.setItem(k, v); }
+}
+
+function sv() {
+  lsSet("tg_" + CU, JSON.stringify(T));
+}
+
+function setUser(name) {
+  CU = name;
+  lsSet("tg_lastUser", name);
+  var stored = lsGet("tg_" + name);
+  if (stored) {
+    T = JSON.parse(stored);
+  } else if (name === "Junaid") {
+    T = decode();
+    sv();
+  } else {
+    T = [];
+  }
+  document.getElementById("ubtn").textContent = name;
+  document.getElementById("ubtn").style.background = UC[name];
+  document.getElementById("usel").className = "ov hide";
+  hdr();
+  upd();
+}
+
+function openUser() { document.getElementById("usel").className = "ov"; }
+function openSett() { document.getElementById("sett").className = "ov"; }
+function closeSett() { document.getElementById("sett").className = "ov hide"; }
+
+function saveUrl() {
+  asUrl = document.getElementById("asurl").value;
+  lsSet("tg_url", asUrl);
+  closeSett();
+  alert("URL saved");
+}
+
+function init() {
+  var u = lsGet("tg_url");
+  if (u) {
+    asUrl = u;
+    document.getElementById("asurl").value = u;
+  }
+  var last = lsGet("tg_lastUser");
+  if (last) {
+    setUser(last);
+  } else {
+    document.getElementById("usel").className = "ov";
+  }
+}
+
+function pushToSheet(t) {
+  if (asUrl.length === 0) { return; }
+  var sy = document.getElementById("sync");
+  sy.textContent = "sync";
+  var row = ["XAUUSD", t.date, t.day, "15min", t.sD, t.db, t.s4, t.h4b, t.biasAligned, t.s1, t.level, t.s15, t.zone + "Pips", t.bs, t.session, t.s5, t.c1, t.c2, t.ls, t.result, t.pnl + " Pips", t.netPnL + " Pips", t.emo, t.note];
+  var data = JSON.stringify({ user: CU, row: row });
+  if (navigator.sendBeacon) {
+    var blob = new Blob([data], { type: "text/plain" });
+    navigator.sendBeacon(asUrl, blob);
+    sy.textContent = "ok";
+  } else {
+    sy.textContent = "ok";
+  }
+}
+
+function go(t) {
+  document.getElementById("t-log").className = "tab";
+  document.getElementById("t-stats").className = "tab";
+  document.getElementById("t-hist").className = "tab";
+  document.getElementById("t-" + t).className = "tab on";
+  document.getElementById("pg-log").className = "pg";
+  document.getElementById("pg-stats").className = "pg";
+  document.getElementById("pg-hist").className = "pg";
+  document.getElementById("pg-" + t).className = "pg on";
+  if (t === "stats") { rStats(); }
+  if (t === "hist") { rHist(); }
+}
+
+function setF(k, v) {
+  F[k] = v;
+  if (v === "Buy") { document.getElementById("bBuy").className = "tog gn"; } else { document.getElementById("bBuy").className = "tog"; }
+  if (v === "Sell") { document.getElementById("bSell").className = "tog rd"; } else { document.getElementById("bSell").className = "tog"; }
+  upd();
+}
+
+function setSt(k, v) {
+  F[k] = v;
+  if (v === "Bullish") { document.getElementById(k + "-B").className = "tog gn"; } else { document.getElementById(k + "-B").className = "tog"; }
+  if (v === "Bearish") { document.getElementById(k + "-R").className = "tog rd"; } else { document.getElementById(k + "-R").className = "tog"; }
+}
+
+function setBi(k, v) {
+  F[k] = v;
+  if (v === "Bullish") { document.getElementById(k + "-B").className = "tog gn"; } else { document.getElementById(k + "-B").className = "tog"; }
+  if (v === "Bearish") { document.getElementById(k + "-R").className = "tog rd"; } else { document.getElementById(k + "-R").className = "tog"; }
+  upd();
+}
+
+function setRes(v) {
+  F.res = v;
+  if (v === "TP") { document.getElementById("bTP").className = "tog gn"; } else { document.getElementById("bTP").className = "tog"; }
+  if (v === "SL") { document.getElementById("bSL").className = "tog rd"; } else { document.getElementById("bSL").className = "tog"; }
+  if (v === "CTC") { document.getElementById("bCTC").className = "tog am"; } else { document.getElementById("bCTC").className = "tog"; }
+  upd();
+}
+
+function upd() {
+  if (CU.length === 0) { return; }
+  var ba = gBias();
+  var c1v = document.getElementById("c1").value;
+  var ls = gLS(c1v);
+  var p = gPnL(F.res);
+  var net = gNet();
+  var nn = net + p;
+  var be = document.getElementById("ba-auto");
+  if (ba === BA[0]) { be.textContent = "Both Aligned"; be.style.color = "#22c55e"; } else { be.textContent = "Not Aligned"; be.style.color = "#f87171"; }
+  var le = document.getElementById("ls-auto");
+  if (ls.length > 0) { le.textContent = ls; } else { le.textContent = "-"; }
+  if (ls === "Yes") { le.style.color = "#22c55e"; } else { le.style.color = "#64748b"; }
+  var pe = document.getElementById("pnl-auto");
+  var ps = "";
+  if (p >= 0) { ps = "+"; }
+  pe.textContent = ps + p + "p";
+  if (p > 0) { pe.style.color = "#22c55e"; } else if (p < 0) { pe.style.color = "#ef4444"; } else { pe.style.color = "#f59e0b"; }
+  var ne = document.getElementById("net-auto");
+  var ns = "";
+  if (nn >= 0) { ns = "+"; }
+  ne.textContent = ns + nn + "p";
+  if (nn >= 0) { ne.style.color = "#22c55e"; } else { ne.style.color = "#ef4444"; }
+  document.getElementById("sbtn").textContent = "Save Trade #" + (T.length + 1);
+}
+
+function hdr() {
+  var net = gNet();
+  var wins = 0;
+  var i = 0;
+  while (i < T.length) { if (T[i].result === "TP") { wins = wins + 1; } i = i + 1; }
+  var wr = 0;
+  if (T.length > 0) { wr = Math.round(wins / T.length * 100); }
+  var hn = document.getElementById("hn");
+  var s = "";
+  if (net >= 0) { s = "+"; }
+  hn.textContent = s + net + "p";
+  if (net >= 0) { hn.style.color = "#22c55e"; } else { hn.style.color = "#ef4444"; }
+  document.getElementById("hc").textContent = T.length + " trades, " + wr + "% WR";
+}
+
+function saveTrade() {
+  if (CU.length === 0) { alert("Select user first"); return; }
+  var c1v = document.getElementById("c1").value;
+  var net = gNet();
+  var pnl = gPnL(F.res);
+  var d = new Date();
+  var t = {};
+  t.id = Date.now();
+  t.no = T.length + 1;
+  t.date = d.toISOString().slice(0, 10);
+  t.day = D7[d.getDay()];
+  t.session = document.getElementById("ses").value;
+  t.bs = F.bs;
+  t.level = document.getElementById("lvl").value;
+  t.zone = document.getElementById("zone").value;
+  t.sD = F.sD;
+  t.s4 = F.s4;
+  t.s1 = F.s1;
+  t.s15 = F.s15;
+  t.s5 = F.s5;
+  t.db = F.db;
+  t.h4b = F.h4;
+  t.biasAligned = gBias();
+  t.c1 = c1v;
+  t.c2 = document.getElementById("c2").value;
+  t.ls = gLS(c1v);
+  t.result = F.res;
+  t.pnl = pnl;
+  t.netPnL = net + pnl;
+  t.emo = document.getElementById("emo").value;
+  t.note = document.getElementById("note").value;
+  T.push(t);
+  sv();
+  pushToSheet(t);
+  hdr();
+  upd();
+  document.getElementById("zone").value = "";
+  document.getElementById("emo").value = "";
+  document.getElementById("note").value = "";
+  alert("Trade saved");
+}
+
+function del(id) {
+  var nu = [];
+  var i = 0;
+  while (i < T.length) { if (T[i].id !== id) { nu.push(T[i]); } i = i + 1; }
+  var n = 0;
+  var j = 0;
+  while (j < nu.length) { n = n + nu[j].pnl; nu[j].no = j + 1; nu[j].netPnL = n; j = j + 1; }
+  T = nu;
+  sv();
+  hdr();
+  upd();
+  rHist();
+}
+
+function bar(pct, c) {
+  var w = pct;
+  if (w > 100) { w = 100; }
+  return "<div class='barbg'><div class='bar' style='width:" + w + "%;background:" + c + "'></div></div>";
+}
+
+function sumBy(key, val) {
+  var n = 0;
+  var ct = 0;
+  var i = 0;
+  while (i < T.length) {
+    if (T[i][key] === val) { n = n + T[i].pnl; ct = ct + 1; }
+    i = i + 1;
+  }
+  return [n, ct];
+}
+
+function rStats() {
+  var net = gNet();
+  var wins = 0;
+  var i = 0;
+  while (i < T.length) { if (T[i].result === "TP") { wins = wins + 1; } i = i + 1; }
+  var wr = 0;
+  if (T.length > 0) { wr = (wins / T.length * 100).toFixed(1); }
+  document.getElementById("st-tot").textContent = T.length;
+  document.getElementById("st-win").textContent = wins;
+  document.getElementById("st-wr").textContent = wr + "%";
+  var sn = document.getElementById("st-net");
+  var ss = "";
+  if (net >= 0) { ss = "+"; }
+  sn.textContent = ss + net + "p";
+  if (net >= 0) { sn.style.color = "#22c55e"; } else { sn.style.color = "#ef4444"; }
+  var aM = Math.abs(net);
+  if (aM < 1) { aM = 1; }
+
+  var lo = ["TJL1", "TJL2 A+", "SBR", "RBS", "DB", "DT", "QMLA+", "Level3"];
+  var h1 = "";
+  var k = 0;
+  while (k < lo.length) {
+    var r = sumBy("level", lo[k]);
+    if (r[1] > 0) {
+      var c = "#ef4444";
+      if (r[0] >= 0) { c = "#22c55e"; }
+      var sg = "";
+      if (r[0] >= 0) { sg = "+"; }
+      h1 = h1 + "<div class='sr'><div class='srl'><span style='color:#f59e0b;font-weight:600'>" + lo[k] + "</span><span style='color:" + c + ";font-weight:700'>" + sg + r[0] + "p " + r[1] + "t</span></div>" + bar(Math.abs(r[0]) / aM * 100, c) + "</div>";
+    }
+    k = k + 1;
+  }
+  document.getElementById("by-lvl").innerHTML = h1;
+
+  var h2 = "";
+  var bl = ["Aligned", "Not Aligned"];
+  var m = 0;
+  while (m < 2) {
+    var r2 = sumBy("biasAligned", BA[m]);
+    if (r2[1] > 0) {
+      var c2 = "#ef4444";
+      if (r2[0] >= 0) { c2 = "#22c55e"; }
+      var sg2 = "";
+      if (r2[0] >= 0) { sg2 = "+"; }
+      h2 = h2 + "<div class='sr'><div class='srl'><span>" + bl[m] + "</span><span style='color:" + c2 + ";font-weight:700'>" + sg2 + r2[0] + "p " + r2[1] + "t</span></div>" + bar(Math.abs(r2[0]) / aM * 100, c2) + "</div>";
+    }
+    m = m + 1;
+  }
+  document.getElementById("by-ba").innerHTML = h2;
+
+  var h3 = "";
+  var ll = ["LS Yes", "LS No"];
+  var lv = ["Yes", "No"];
+  var q = 0;
+  while (q < 2) {
+    var r3 = sumBy("ls", lv[q]);
+    if (r3[1] > 0) {
+      var c3 = "#ef4444";
+      if (r3[0] >= 0) { c3 = "#22c55e"; }
+      var sg3 = "";
+      if (r3[0] >= 0) { sg3 = "+"; }
+      h3 = h3 + "<div class='sr'><div class='srl'><span>" + ll[q] + "</span><span style='color:" + c3 + ";font-weight:700'>" + sg3 + r3[0] + "p " + r3[1] + "t</span></div>" + bar(Math.abs(r3[0]) / aM * 100, c3) + "</div>";
+    }
+    q = q + 1;
+  }
+  document.getElementById("by-ls").innerHTML = h3;
+
+  var h5 = "";
+  var s = 0;
+  while (s < SES.length) {
+    var ct = 0;
+    var x = 0;
+    while (x < T.length) { if (T[x].session === SES[s]) { ct = ct + 1; } x = x + 1; }
+    if (ct > 0) {
+      h5 = h5 + "<div style='background:#0a1628;border-radius:8px;padding:8px 12px;border:1px solid #334155;text-align:center'><div style='color:#f59e0b;font-weight:700;font-size:18px'>" + ct + "</div><div style='color:#64748b;font-size:11px'>" + SES[s] + "</div></div>";
+    }
+    s = s + 1;
+  }
+  document.getElementById("by-ses").innerHTML = h5;
+}
+
+function rHist() {
+  document.getElementById("hct").textContent = T.length + " trades";
+  var html = "";
+  var i = T.length - 1;
+  while (i >= 0) {
+    var t = T[i];
+    var rc = "#f59e0b";
+    if (t.result === "TP") { rc = "#22c55e"; }
+    if (t.result === "SL") { rc = "#ef4444"; }
+    var nc = "#ef4444";
+    if (t.netPnL >= 0) { nc = "#22c55e"; }
+    var bc = "#ef4444";
+    if (t.bs === "Buy") { bc = "#22c55e"; }
+    var zt = "";
+    if (t.zone) { zt = " " + t.zone + "p"; }
+    var al = "NO";
+    if (t.biasAligned === BA[0]) { al = "OK"; }
+    var ns = "";
+    if (t.netPnL >= 0) { ns = "+"; }
+    html = html + "<div class='ti'><div>";
+    html = html + "<div style='display:flex;gap:6px;align-items:center'><span style='color:#475569;font-size:11px'>#" + t.no + "</span><span style='color:" + bc + ";font-weight:700'>" + t.bs + "</span><span style='color:#f59e0b;font-weight:700'>" + t.level + zt + "</span></div>";
+    html = html + "<div style='color:#475569;font-size:10px;margin-top:2px'>" + t.date + " " + t.session + " " + al + " LS:" + (t.ls ? t.ls : "-") + "</div>";
+    if (t.note) { html = html + "<div style='color:#475569;font-size:10px;font-style:italic'>" + t.note + "</div>"; }
+    html = html + "</div><div style='display:flex;align-items:center;gap:8px'><div style='text-align:right'><div style='color:" + rc + ";font-weight:700'>" + t.result + "</div><div style='color:" + nc + ";font-size:11px;font-weight:600'>" + ns + t.netPnL + "p</div></div><button class='dbtn' onclick='del(" + t.id + ")'>X</button></div></div>";
+    i = i - 1;
+  }
+  if (html.length === 0) { html = "<div style='color:#334155;text-align:center;padding:24px 0;font-size:12px'>No trades yet</div>"; }
+  document.getElementById("hlist").innerHTML = html;
+}
+
+function xcsv() {
+  if (T.length === 0) { return; }
+  var rows = ["#,Date,Day,Session,BS,Level,Zone,SD,S4,S1,S15,S5,DBias,4HBias,Aligned,Conf1,Conf2,LS,Result,PnL,NetPnL,Notes"];
+  var i = 0;
+  while (i < T.length) {
+    var t = T[i];
+    rows.push([t.no, t.date, t.day, t.session, t.bs, t.level, t.zone, t.sD, t.s4, t.s1, t.s15, t.s5, t.db, t.h4b, t.biasAligned, t.c1, t.c2, t.ls, t.result, t.pnl, t.netPnL, t.note].join(","));
+    i = i + 1;
+  }
+  var blob = new Blob([rows.join("\n")], { type: "text/csv" });
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "topg_" + CU + ".csv";
+  a.click();
+}
+
+init();
+</script>
+</body>
+</html>
