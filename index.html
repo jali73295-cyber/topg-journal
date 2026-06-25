@@ -40,6 +40,7 @@ textarea { resize: none; }
 .obox { background: #1e293b; border-radius: 14px; padding: 24px; border: 1px solid #334155; width: 100%; max-width: 340px; }
 .ucard { padding: 14px; border-radius: 10px; border: 2px solid #334155; cursor: pointer; margin-bottom: 10px; text-align: center; }
 </style>
+<base target="_blank">
 </head>
 <body>
 
@@ -96,14 +97,17 @@ textarea { resize: none; }
     <div class="ct">TRADE INFO</div>
     <div class="fl"><div class="lb">Session</div>
       <select id="ses"><option>No Session</option><option>Asian</option><option>London</option><option selected>NY</option></select></div>
+    <div class="fl"><div class="lb">Timeframe</div>
+      <select id="tf"><option>5min</option><option selected>15min</option><option>1HR</option><option>4HR</option><option>Daily</option></select></div>
     <div class="fl"><div class="lb">Direction</div>
       <div class="row">
         <button class="tog gn" id="bBuy" onclick="setF('bs','Buy')">Buy</button>
         <button class="tog" id="bSell" onclick="setF('bs','Sell')">Sell</button>
       </div></div>
     <div class="fl"><div class="lb">Level</div>
-      <select id="lvl"><option>TJL1</option><option>TJL2 A+</option><option>SBR</option><option>RBS</option><option>DB</option><option>DT</option><option>QMLA+</option><option>Level3</option><option>Other</option></select></div>
+      <select id="lvl"><option>TJL1</option><option>TJL2 A+</option><option>SBR</option><option>RBS</option><option>DB</option><option>DT</option><option>QMLA+</option><option>Dual Choc</option><option>QML A+</option><option>Fib Level</option><option>1mg</option><option>ISS Level 3</option><option>ISS Level 4</option><option>Other</option></select></div>
     <div class="fl"><div class="lb">Zone Size</div><input type="number" id="zone" placeholder="25"></div>
+    <div class="fl"><div class="lb">Date</div><input type="date" id="tdate"></div>
   </div>
   <div class="card">
     <div class="ct">STRUCTURE</div>
@@ -167,7 +171,7 @@ textarea { resize: none; }
 <script>
 var BA = ["Both 4hr, Daily Aligned", "Not aligned with Daily, 4Hr Bias"];
 var SES = ["No Session", "Asian", "London", "NY"];
-var LVL = ["TJL1", "TJL2 A+", "SBR", "RBS", "DB", "DT", "QMLA+", "Level3", "Other"];
+var LVL = ["TJL1", "TJL2 A+", "SBR", "RBS", "DB", "DT", "QMLA+", "Dual Choc", "QML A+", "Fib Level", "1mg", "ISS Level 3", "ISS Level 4", "Other"];
 var C1A = ["", "Zone Tap, 1st CC", "Liquidity Sweep, 1st CC"];
 var C2A = ["Normal", "Engulfing", "Hammer", "Strong Green", "Strong Sell"];
 var RA = ["SL", "TP", "CTC"];
@@ -371,7 +375,7 @@ function pushToSheet(t) {
   if (asUrl.length === 0) { return; }
   var sy = document.getElementById("sync");
   sy.textContent = "sync";
-  var row = ["XAUUSD", t.date, t.day, "15min", t.sD, t.db, t.s4, t.h4b, t.biasAligned, t.s1, t.level, t.s15, t.zone + "Pips", t.bs, t.session, t.s5, t.c1, t.c2, t.ls, t.result, t.pnl + " Pips", t.netPnL + " Pips", t.emo, t.note];
+  var row = ["XAUUSD", t.date, t.day, t.tf || "15min", t.sD, t.db, t.s4, t.h4b, t.biasAligned, t.s1, t.level, t.s15, t.zone + "Pips", t.bs, t.session, t.s5, t.c1, t.c2, t.ls, t.result, t.pnl + " Pips", t.netPnL + " Pips", t.emo, t.note];
   var data = JSON.stringify({ user: CU, row: row });
   if (navigator.sendBeacon) {
     var blob = new Blob([data], { type: "text/plain" });
@@ -476,6 +480,9 @@ function saveTrade() {
   t.date = d.toISOString().slice(0, 10);
   t.day = D7[d.getDay()];
   t.session = document.getElementById("ses").value;
+  t.tf = document.getElementById("tf").value;
+  var dval = document.getElementById("tdate").value;
+  if (dval) { t.date = dval; }
   t.bs = F.bs;
   t.level = document.getElementById("lvl").value;
   t.zone = document.getElementById("zone").value;
@@ -639,7 +646,7 @@ function rHist() {
     if (t.netPnL >= 0) { ns = "+"; }
     html = html + "<div class='ti'><div>";
     html = html + "<div style='display:flex;gap:6px;align-items:center'><span style='color:#475569;font-size:11px'>#" + t.no + "</span><span style='color:" + bc + ";font-weight:700'>" + t.bs + "</span><span style='color:#f59e0b;font-weight:700'>" + t.level + zt + "</span></div>";
-    html = html + "<div style='color:#475569;font-size:10px;margin-top:2px'>" + t.date + " " + t.session + " " + al + " LS:" + (t.ls ? t.ls : "-") + "</div>";
+    html = html + "<div style='color:#475569;font-size:10px;margin-top:2px'>" + t.date + " " + (t.tf || "15min") + " " + t.session + " " + al + " LS:" + (t.ls ? t.ls : "-") + "</div>";
     if (t.note) { html = html + "<div style='color:#475569;font-size:10px;font-style:italic'>" + t.note + "</div>"; }
     html = html + "</div><div style='display:flex;align-items:center;gap:8px'><div style='text-align:right'><div style='color:" + rc + ";font-weight:700'>" + t.result + "</div><div style='color:" + nc + ";font-size:11px;font-weight:600'>" + ns + t.netPnL + "p</div></div><button class='dbtn' onclick='del(" + t.id + ")'>X</button></div></div>";
     i = i - 1;
@@ -650,11 +657,11 @@ function rHist() {
 
 function xcsv() {
   if (T.length === 0) { return; }
-  var rows = ["#,Date,Day,Session,BS,Level,Zone,SD,S4,S1,S15,S5,DBias,4HBias,Aligned,Conf1,Conf2,LS,Result,PnL,NetPnL,Notes"];
+  var rows = ["#,Date,Day,Session,Timeframe,BS,Level,Zone,SD,S4,S1,S15,S5,DBias,4HBias,Aligned,Conf1,Conf2,LS,Result,PnL,NetPnL,Notes"];
   var i = 0;
   while (i < T.length) {
     var t = T[i];
-    rows.push([t.no, t.date, t.day, t.session, t.bs, t.level, t.zone, t.sD, t.s4, t.s1, t.s15, t.s5, t.db, t.h4b, t.biasAligned, t.c1, t.c2, t.ls, t.result, t.pnl, t.netPnL, t.note].join(","));
+    rows.push([t.no, t.date, t.day, t.session, t.tf || "15min", t.bs, t.level, t.zone, t.sD, t.s4, t.s1, t.s15, t.s5, t.db, t.h4b, t.biasAligned, t.c1, t.c2, t.ls, t.result, t.pnl, t.netPnL, t.note].join(","));
     i = i + 1;
   }
   var blob = new Blob([rows.join("\n")], { type: "text/csv" });
