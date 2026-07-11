@@ -24,6 +24,13 @@ textarea { resize: none; }
 .gn { background: #22c55e; color: #000; }
 .rd { background: #ef4444; color: #000; }
 .am { background: #f59e0b; color: #000; }
+.bl { background: #3b82f6; color: #000; }
+.ssrow { display: flex; align-items: center; gap: 10px; }
+.ssimg { width: 56px; height: 56px; object-fit: cover; border-radius: 8px; border: 1px solid #334155; }
+.filein { background: #0a1628; border: 1px solid #334155; border-radius: 6px; color: #64748b; padding: 8px 10px; width: 100%; font-size: 12px; }
+.hti { display: flex; gap: 6px; align-items: center; margin-top: 4px; }
+.hti a { color: #60a5fa; font-size: 10px; text-decoration: underline; }
+.hth { width: 28px; height: 28px; object-fit: cover; border-radius: 4px; border: 1px solid #334155; }
 .badge { background: #0a1628; border: 1px solid #334155; border-radius: 6px; padding: 8px 10px; font-weight: 700; font-size: 13px; }
 .sbtn { width: 100%; padding: 13px; border: none; border-radius: 8px; background: #f59e0b; color: #000; font-weight: 800; cursor: pointer; font-size: 14px; }
 .kgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
@@ -124,12 +131,23 @@ textarea { resize: none; }
     <div class="fl"><div class="lb au">Bias Aligned</div><div id="ba-auto" class="badge" style="color:#22c55e">Both Aligned</div></div>
   </div>
   <div class="card">
-    <div class="ct">CONFIRMATION</div>
-    <div class="fl"><div class="lb">Conf 1</div>
-      <select id="c1" onchange="upd()"><option value="">None</option><option value="Zone Tap, 1st CC">Zone Tap, 1st CC</option><option value="Liquidity Sweep, 1st CC">Liquidity Sweep, 1st CC</option></select></div>
-    <div class="fl"><div class="lb">Conf 2</div>
-      <select id="c2"><option>Normal</option><option>Engulfing</option><option>Hammer</option><option>Strong Green</option><option>Strong Sell</option></select></div>
+    <div class="ct">CONFIRMATION 1</div>
+    <div class="fl"><div class="lb">Liquidity Sweep 1</div>
+      <div class="row">
+        <button class="tog" id="ls1-Y" onclick="setLS('ls1','Yes')">Yes</button>
+        <button class="tog rd" id="ls1-N" onclick="setLS('ls1','No')">No</button>
+      </div></div>
+    <div class="fl"><div class="lb">Liquidity Sweep 2</div>
+      <div class="row">
+        <button class="tog" id="ls2-Y" onclick="setLS('ls2','Yes')">Yes</button>
+        <button class="tog rd" id="ls2-N" onclick="setLS('ls2','No')">No</button>
+      </div></div>
     <div class="fl"><div class="lb au">Liq Sweep</div><div id="ls-auto" class="badge" style="color:#64748b">-</div></div>
+  </div>
+  <div class="card">
+    <div class="ct">CONFIRMATION 2</div>
+    <div class="fl"><div class="lb">Candle Confirmation</div>
+      <select id="c2"><option>Normal</option><option>Engulfing</option><option>Hammer</option><option>Strong Green</option><option>Strong Sell</option></select></div>
   </div>
   <div class="card">
     <div class="ct">RESULT</div>
@@ -137,12 +155,21 @@ textarea { resize: none; }
       <div class="row">
         <button class="tog gn" id="bTP" onclick="setRes('TP')">TP</button>
         <button class="tog" id="bSL" onclick="setRes('SL')">SL</button>
-        <button class="tog" id="bCTC" onclick="setRes('CTC')">CTC</button>
+        <button class="tog" id="bRF" onclick="setRes('Risk Free')">Risk Free</button>
       </div></div>
     <div class="fl"><div class="lb au">PnL</div><div id="pnl-auto" class="badge" style="color:#22c55e">70p</div></div>
     <div class="fl"><div class="lb au">Net PnL</div><div id="net-auto" class="badge" style="color:#22c55e">70p</div></div>
     <div class="fl"><div class="lb">Emotions</div><input type="text" id="emo" placeholder="Calm"></div>
     <div class="fl"><div class="lb">Notes</div><textarea id="note" rows="2" placeholder="Notes"></textarea></div>
+  </div>
+  <div class="card">
+    <div class="ct">TRADING VIEW</div>
+    <div class="fl"><div class="lb">TradingView Link</div><input type="url" id="tvlink" placeholder="https://www.tradingview.com/x/..."></div>
+    <div class="fl"><div class="lb">Screenshot (upload)</div>
+      <input type="file" id="ssfile" class="filein" accept="image/*" onchange="ssPick(event)">
+      <div class="ssrow" id="sspreview" style="margin-top:8px"></div>
+    </div>
+    <div class="fl"><div class="lb">Screenshot (or paste image link)</div><input type="url" id="ssurl" placeholder="https://..."></div>
     <button class="sbtn" id="sbtn" onclick="saveTrade()">Save Trade</button>
   </div>
 </div>
@@ -287,7 +314,8 @@ function decode() {
 var T = [];
 var CU = "";
 var asUrl = "";
-var F = { bs: "Buy", sD: "Bullish", s4: "Bullish", s1: "Bullish", s15: "Bullish", s5: "Bullish", db: "Bullish", h4: "Bullish", res: "TP" };
+var ssData = "";
+var F = { bs: "Buy", sD: "Bullish", s4: "Bullish", s1: "Bullish", s15: "Bullish", s5: "Bullish", db: "Bullish", h4: "Bullish", res: "TP", ls1: "No", ls2: "No" };
 
 function gNet() {
   var s = 0;
@@ -302,10 +330,9 @@ function gBias() {
   return BA[1];
 }
 
-function gLS(v) {
-  if (v.indexOf("Liquidity") >= 0) { return "Yes"; }
-  if (v.length > 0) { return "No"; }
-  return "";
+function gLS() {
+  if (F.ls1 === "Yes" || F.ls2 === "Yes") { return "Yes"; }
+  return "No";
 }
 
 function gPnL(r) {
@@ -375,7 +402,7 @@ function pushToSheet(t) {
   if (asUrl.length === 0) { return; }
   var sy = document.getElementById("sync");
   sy.textContent = "sync";
-  var row = ["XAUUSD", t.date, t.day, t.tf || "15min", t.sD, t.db, t.s4, t.h4b, t.biasAligned, t.s1, t.level, t.s15, t.zone + "Pips", t.bs, t.session, t.s5, t.c1, t.c2, t.ls, t.result, t.pnl + " Pips", t.netPnL + " Pips", t.emo, t.note];
+  var row = ["XAUUSD", t.date, t.day, t.tf || "15min", t.sD, t.db, t.s4, t.h4b, t.biasAligned, t.s1, t.level, t.s15, t.zone + "Pips", t.bs, t.session, t.s5, t.ls1, t.ls2, t.c2, t.ls, t.result, t.pnl + " Pips", t.netPnL + " Pips", t.emo, t.note, t.tvLink, t.ssUrl];
   var data = JSON.stringify({ user: CU, row: row });
   if (navigator.sendBeacon) {
     var blob = new Blob([data], { type: "text/plain" });
@@ -419,19 +446,36 @@ function setBi(k, v) {
   upd();
 }
 
+function setLS(k, v) {
+  F[k] = v;
+  if (v === "Yes") { document.getElementById(k + "-Y").className = "tog gn"; } else { document.getElementById(k + "-Y").className = "tog"; }
+  if (v === "No") { document.getElementById(k + "-N").className = "tog rd"; } else { document.getElementById(k + "-N").className = "tog"; }
+  upd();
+}
+
 function setRes(v) {
   F.res = v;
   if (v === "TP") { document.getElementById("bTP").className = "tog gn"; } else { document.getElementById("bTP").className = "tog"; }
   if (v === "SL") { document.getElementById("bSL").className = "tog rd"; } else { document.getElementById("bSL").className = "tog"; }
-  if (v === "CTC") { document.getElementById("bCTC").className = "tog am"; } else { document.getElementById("bCTC").className = "tog"; }
+  if (v === "Risk Free") { document.getElementById("bRF").className = "tog bl"; } else { document.getElementById("bRF").className = "tog"; }
   upd();
+}
+
+function ssPick(e) {
+  var f = e.target.files[0];
+  if (!f) { return; }
+  var reader = new FileReader();
+  reader.onload = function (ev) {
+    ssData = ev.target.result;
+    document.getElementById("sspreview").innerHTML = "<img class='ssimg' src='" + ssData + "'><span style='color:#64748b;font-size:11px'>" + f.name + "</span>";
+  };
+  reader.readAsDataURL(f);
 }
 
 function upd() {
   if (CU.length === 0) { return; }
   var ba = gBias();
-  var c1v = document.getElementById("c1").value;
-  var ls = gLS(c1v);
+  var ls = gLS();
   var p = gPnL(F.res);
   var net = gNet();
   var nn = net + p;
@@ -470,7 +514,6 @@ function hdr() {
 
 function saveTrade() {
   if (CU.length === 0) { alert("Select user first"); return; }
-  var c1v = document.getElementById("c1").value;
   var net = gNet();
   var pnl = gPnL(F.res);
   var d = new Date();
@@ -494,14 +537,18 @@ function saveTrade() {
   t.db = F.db;
   t.h4b = F.h4;
   t.biasAligned = gBias();
-  t.c1 = c1v;
+  t.ls1 = F.ls1;
+  t.ls2 = F.ls2;
   t.c2 = document.getElementById("c2").value;
-  t.ls = gLS(c1v);
+  t.ls = gLS();
   t.result = F.res;
   t.pnl = pnl;
   t.netPnL = net + pnl;
   t.emo = document.getElementById("emo").value;
   t.note = document.getElementById("note").value;
+  t.tvLink = document.getElementById("tvlink").value;
+  t.ssUrl = document.getElementById("ssurl").value;
+  t.ssData = ssData;
   T.push(t);
   sv();
   pushToSheet(t);
@@ -510,6 +557,11 @@ function saveTrade() {
   document.getElementById("zone").value = "";
   document.getElementById("emo").value = "";
   document.getElementById("note").value = "";
+  document.getElementById("tvlink").value = "";
+  document.getElementById("ssurl").value = "";
+  document.getElementById("ssfile").value = "";
+  document.getElementById("sspreview").innerHTML = "";
+  ssData = "";
   alert("Trade saved");
 }
 
@@ -648,6 +700,13 @@ function rHist() {
     html = html + "<div style='display:flex;gap:6px;align-items:center'><span style='color:#475569;font-size:11px'>#" + t.no + "</span><span style='color:" + bc + ";font-weight:700'>" + t.bs + "</span><span style='color:#f59e0b;font-weight:700'>" + t.level + zt + "</span></div>";
     html = html + "<div style='color:#475569;font-size:10px;margin-top:2px'>" + t.date + " " + (t.tf || "15min") + " " + t.session + " " + al + " LS:" + (t.ls ? t.ls : "-") + "</div>";
     if (t.note) { html = html + "<div style='color:#475569;font-size:10px;font-style:italic'>" + t.note + "</div>"; }
+    var ssSrc = t.ssData || t.ssUrl;
+    if (t.tvLink || ssSrc) {
+      html = html + "<div class='hti'>";
+      if (ssSrc) { html = html + "<a href='" + ssSrc + "'><img class='hth' src='" + ssSrc + "'></a>"; }
+      if (t.tvLink) { html = html + "<a href='" + t.tvLink + "'>TradingView &#8599;</a>"; }
+      html = html + "</div>";
+    }
     html = html + "</div><div style='display:flex;align-items:center;gap:8px'><div style='text-align:right'><div style='color:" + rc + ";font-weight:700'>" + t.result + "</div><div style='color:" + nc + ";font-size:11px;font-weight:600'>" + ns + t.netPnL + "p</div></div><button class='dbtn' onclick='del(" + t.id + ")'>X</button></div></div>";
     i = i - 1;
   }
@@ -657,11 +716,11 @@ function rHist() {
 
 function xcsv() {
   if (T.length === 0) { return; }
-  var rows = ["#,Date,Day,Session,Timeframe,BS,Level,Zone,SD,S4,S1,S15,S5,DBias,4HBias,Aligned,Conf1,Conf2,LS,Result,PnL,NetPnL,Notes"];
+  var rows = ["#,Date,Day,Session,Timeframe,BS,Level,Zone,SD,S4,S1,S15,S5,DBias,4HBias,Aligned,LiqSweep1,LiqSweep2,Conf2,LS,Result,PnL,NetPnL,Notes,TradingViewLink,ScreenshotUrl"];
   var i = 0;
   while (i < T.length) {
     var t = T[i];
-    rows.push([t.no, t.date, t.day, t.session, t.tf || "15min", t.bs, t.level, t.zone, t.sD, t.s4, t.s1, t.s15, t.s5, t.db, t.h4b, t.biasAligned, t.c1, t.c2, t.ls, t.result, t.pnl, t.netPnL, t.note].join(","));
+    rows.push([t.no, t.date, t.day, t.session, t.tf || "15min", t.bs, t.level, t.zone, t.sD, t.s4, t.s1, t.s15, t.s5, t.db, t.h4b, t.biasAligned, t.ls1, t.ls2, t.c2, t.ls, t.result, t.pnl, t.netPnL, t.note, t.tvLink, t.ssUrl].join(","));
     i = i + 1;
   }
   var blob = new Blob([rows.join("\n")], { type: "text/csv" });
